@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Flashcards — Atención a Prestadores · JS</title>
+<style>
+  :root {
+    --rojo: #C0392B;
+    --rojo-oscuro: #922B21;
+    --rojo-claro: #FADBD8;
+    --rojo-suave: #F9EBEA;
+    --gris-oscuro: #2C3E50;
+    --gris-medio: #5D6D7E;
+    --gris-claro: #F0F3F4;
+    --gris-borde: #D5D8DC;
+    --blanco: #FFFFFF;
+    --verde: #1E8449;
+    --verde-claro: #D5F5E3;
+    --amarillo: #D68910;
+    --amarillo-claro: #FEF9E7;
+    --texto: #1C2833;
+    --sombra: 0 2px 12px rgba(0,0,0,0.10);
+    --sombra-card: 0 4px 24px rgba(0,0,0,0.13);
+    --radio: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--gris-claro);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--rojo);
+    padding: 0 24px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: .01em;
+  }
+  .header-brand .logo {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: white;
+  }
+  .header-right {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .btn-admin-link {
+    font-size: 12px; color: rgba(255,255,255,0.75);
+    text-decoration: none; padding: 4px 10px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    transition: all .2s;
+  }
+  .btn-admin-link:hover { background: rgba(255,255,255,0.15); color: white; }
+
+  /* ── PANTALLA INICIO ── */
+  #screen-inicio {
+    max-width: 520px; margin: 0 auto;
+    padding: 48px 24px;
+  }
+  .inicio-card {
+    background: white;
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-card);
+    padding: 40px 36px;
+    text-align: center;
+  }
+  .inicio-icon {
+    width: 64px; height: 64px;
+    background: var(--rojo-suave);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 28px;
+  }
+  .inicio-card h1 {
+    font-size: 22px; font-weight: 700;
+    color: var(--gris-oscuro); margin-bottom: 6px;
+  }
+  .inicio-card .subtitulo {
+    font-size: 14px; color: var(--gris-medio); margin-bottom: 28px;
+  }
+  .modulos-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    justify-content: center; margin-bottom: 28px;
+  }
+  .chip {
+    font-size: 12px; font-weight: 600; padding: 4px 10px;
+    border-radius: 20px; border: 1.5px solid;
+  }
+  .chip-rojo { background: var(--rojo-claro); color: var(--rojo-oscuro); border-color: #F1948A; }
+  .chip-azul { background: #D6EAF8; color: #1A5276; border-color: #85C1E9; }
+  .chip-verde { background: var(--verde-claro); color: #145A32; border-color: #82E0AA; }
+  .chip-violeta { background: #E8DAEF; color: #6C3483; border-color: #C39BD3; }
+  .chip-naranja { background: #FAE5D3; color: #784212; border-color: #F0B27A; }
+
+  .form-group { text-align: left; margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--gris-medio); margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px; font-size: 15px;
+    color: var(--texto); outline: none;
+    transition: border-color .2s;
+    font-family: inherit;
+  }
+  .form-group input:focus { border-color: var(--rojo); }
+
+  .stats-row {
+    display: flex; gap: 12px; margin-bottom: 24px;
+  }
+  .stat-box {
+    flex: 1; background: var(--gris-claro);
+    border-radius: 8px; padding: 12px;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 22px; font-weight: 700; color: var(--rojo); }
+  .stat-box .lbl { font-size: 11px; color: var(--gris-medio); margin-top: 2px; }
+
+  .btn-primary {
+    width: 100%; padding: 13px;
+    background: var(--rojo); color: white;
+    border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background .2s;
+    font-family: inherit;
+  }
+  .btn-primary:hover { background: var(--rojo-oscuro); }
+  .btn-primary:disabled { background: var(--gris-borde); cursor: default; }
+
+  /* ── PANTALLA JUEGO ── */
+  #screen-juego { display: none; max-width: 640px; margin: 0 auto; padding: 24px 16px; }
+
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-top {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 8px;
+  }
+  .progress-label { font-size: 13px; color: var(--gris-medio); }
+  .progress-num { font-size: 13px; font-weight: 700; color: var(--rojo); }
+  .progress-bar-bg {
+    height: 6px; background: var(--gris-borde);
+    border-radius: 3px; overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%; background: var(--rojo);
+    border-radius: 3px; transition: width .4s ease;
+  }
+  .progress-dots {
+    display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px;
+  }
+  .pdot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gris-borde);
+    transition: background .3s;
+  }
+  .pdot.ok { background: var(--verde); }
+  .pdot.parcial { background: var(--amarillo); }
+  .pdot.mal { background: var(--rojo); }
+  .pdot.activo { background: var(--gris-oscuro); }
+
+  /* FLASHCARD */
+  .card-wrap {
+    perspective: 1000px;
+    height: 300px; margin-bottom: 16px;
+    cursor: pointer;
+  }
+  .card-inner {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    transition: transform .55s cubic-bezier(.4,0,.2,1);
+  }
+  .card-inner.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; width: 100%; height: 100%;
+    backface-visibility: hidden;
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-card);
+    display: flex; flex-direction: column;
+    padding: 28px;
+  }
+  .card-front {
+    background: white;
+  }
+  .card-back {
+    background: white;
+    transform: rotateY(180deg);
+  }
+  .card-modulo {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; padding: 4px 10px;
+    border-radius: 20px; margin-bottom: 16px;
+    width: fit-content;
+  }
+  .card-numero {
+    font-size: 11px; color: var(--gris-medio);
+    margin-bottom: auto;
+    text-align: right;
+  }
+  .card-pregunta {
+    font-size: 18px; font-weight: 600;
+    color: var(--gris-oscuro); line-height: 1.45;
+    flex: 1; display: flex; align-items: center;
+  }
+  .card-hint {
+    font-size: 12px; color: var(--gris-medio);
+    margin-top: 16px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .card-flip-hint {
+    font-size: 12px; color: var(--gris-medio);
+    text-align: center; margin-top: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+
+  /* BACK */
+  .card-respuesta-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--rojo); margin-bottom: 10px;
+  }
+  .card-respuesta {
+    font-size: 17px; font-weight: 700;
+    color: var(--gris-oscuro); margin-bottom: 14px; line-height: 1.35;
+  }
+  .card-explicacion {
+    font-size: 13px; color: var(--gris-medio);
+    line-height: 1.55; flex: 1;
+    overflow-y: auto;
+  }
+  .card-back-modulo {
+    font-size: 11px; color: var(--gris-borde);
+    margin-top: 12px; text-align: right;
+  }
+
+  /* BOTONES DE EVALUACIÓN */
+  .eval-wrap { display: none; }
+  .eval-label {
+    text-align: center; font-size: 13px;
+    color: var(--gris-medio); margin-bottom: 10px; font-weight: 600;
+  }
+  .eval-btns { display: flex; gap: 10px; }
+  .eval-btn {
+    flex: 1; padding: 12px 8px;
+    border-radius: 8px; border: 2px solid;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .15s;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 3px;
+    font-family: inherit;
+  }
+  .eval-btn .eval-icon { font-size: 18px; }
+  .eval-btn .eval-text { font-size: 12px; }
+  .eval-btn-ok {
+    background: var(--verde-claro); color: var(--verde);
+    border-color: #82E0AA;
+  }
+  .eval-btn-ok:hover { background: #A9DFBF; }
+  .eval-btn-parcial {
+    background: var(--amarillo-claro); color: var(--amarillo);
+    border-color: #F8C471;
+  }
+  .eval-btn-parcial:hover { background: #FCE5A0; }
+  .eval-btn-mal {
+    background: var(--rojo-claro); color: var(--rojo-oscuro);
+    border-color: #F1948A;
+  }
+  .eval-btn-mal:hover { background: #F5B7B1; }
+
+  /* ── PANTALLA RESULTADO ── */
+  #screen-resultado { display: none; max-width: 580px; margin: 0 auto; padding: 32px 16px; }
+  .result-card {
+    background: white; border-radius: var(--radio);
+    box-shadow: var(--sombra-card); padding: 36px;
+    margin-bottom: 16px;
+  }
+  .result-header { text-align: center; margin-bottom: 28px; }
+  .result-badge {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; margin: 0 auto 14px;
+  }
+  .result-score {
+    font-size: 36px; font-weight: 800; color: var(--rojo);
+  }
+  .result-score-lbl {
+    font-size: 13px; color: var(--gris-medio); margin-top: 2px;
+  }
+  .result-nombre {
+    font-size: 16px; font-weight: 600; color: var(--gris-oscuro);
+    margin-top: 6px;
+  }
+  .result-msg {
+    font-size: 14px; color: var(--gris-medio);
+    margin-top: 6px; line-height: 1.4;
+  }
+  .result-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin-bottom: 24px;
+  }
+  .rs-box {
+    border-radius: 8px; padding: 14px 8px; text-align: center;
+  }
+  .rs-box .rs-n { font-size: 26px; font-weight: 800; }
+  .rs-box .rs-l { font-size: 11px; margin-top: 2px; font-weight: 600; }
+  .rs-ok { background: var(--verde-claro); }
+  .rs-ok .rs-n { color: var(--verde); }
+  .rs-ok .rs-l { color: #145A32; }
+  .rs-parcial { background: var(--amarillo-claro); }
+  .rs-parcial .rs-n { color: var(--amarillo); }
+  .rs-parcial .rs-l { color: #784212; }
+  .rs-mal { background: var(--rojo-claro); }
+  .rs-mal .rs-n { color: var(--rojo-oscuro); }
+  .rs-mal .rs-l { color: var(--rojo-oscuro); }
+
+  .result-time {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; font-size: 13px; color: var(--gris-medio);
+    margin-bottom: 24px;
+  }
+
+  .repaso-title {
+    font-size: 13px; font-weight: 700; color: var(--gris-oscuro);
+    margin-bottom: 10px; text-transform: uppercase; letter-spacing: .05em;
+  }
+  .repaso-item {
+    background: var(--rojo-suave); border-left: 3px solid var(--rojo);
+    border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px;
+  }
+  .repaso-item .ri-q { font-size: 13px; color: var(--gris-oscuro); margin-bottom: 3px; }
+  .repaso-item .ri-a { font-size: 12px; color: var(--rojo-oscuro); font-weight: 600; }
+
+  .result-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-secondary {
+    flex: 1; padding: 12px;
+    background: white; color: var(--rojo);
+    border: 2px solid var(--rojo);
+    border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+    font-family: inherit;
+  }
+  .btn-secondary:hover { background: var(--rojo-suave); }
+
+  .guardado-msg {
+    text-align: center; font-size: 12px;
+    color: var(--verde); margin-top: 10px;
+    display: none;
+  }
+
+  /* SPINNER */
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin .7s linear infinite; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESPONSIVE */
+  @media (max-width: 480px) {
+    .card-pregunta { font-size: 15px; }
+    .card-respuesta { font-size: 15px; }
+    .eval-btn .eval-text { display: none; }
+    .result-stats { grid-template-columns: repeat(3,1fr); }
+    .inicio-card { padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-brand">
+    <div class="logo">JS</div>
+    Flashcards — Atención a Prestadores
+  </div>
+  <div class="header-right">
+    <a href="admin.html" class="btn-admin-link">Panel admin</a>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     PANTALLA 1: INICIO
+══════════════════════════════════════ -->
+<div id="screen-inicio">
+  <div class="inicio-card">
+    <div class="inicio-icon">🃏</div>
+    <h1>Práctica de Flashcards</h1>
+    <p class="subtitulo">Repasá los conceptos clave del manual de prestadores</p>
+
+    <div class="modulos-chips">
+      <span class="chip chip-rojo">Convenios</span>
+      <span class="chip chip-azul">Liquidación</span>
+      <span class="chip chip-verde">Pagos</span>
+      <span class="chip chip-violeta">Integración</span>
+      <span class="chip chip-naranja">Facturación</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="num" id="stat-total">23</div>
+        <div class="lbl">Cards totales</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">5</div>
+        <div class="lbl">Módulos</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">~12'</div>
+        <div class="lbl">Tiempo aprox.</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Tu nombre completo</label>
+      <input type="text" id="input-nombre" placeholder="Ej: María González" autocomplete="off"/>
+    </div>
+
+    <button class="btn-primary" id="btn-empezar" onclick="empezar()">
+      Empezar práctica
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PANTALLA 2: JUEGO
+══════════════════════════════════════ -->
+<div id="screen-juego">
+
+  <!-- PROGRESO -->
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span class="progress-label" id="prog-modulo">Módulo</span>
+      <span class="progress-num" id="prog-num">1 / 23</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="prog-bar" style="width:0%"></div>
+    </div>
+    <div class="progress-dots" id="prog-dots"></div>
+  </div>
+
+  <!-- FLASHCARD -->
+  <div class="card-wrap" id="card-wrap" onclick="voltear()">
+    <div class="card-inner" id="card-inner">
+      <!-- FRENTE -->
+      <div class="card-face card-front">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div class="card-modulo" id="cf-modulo"></div>
+          <div class="card-numero" id="cf-num"></div>
+        </div>
+        <div class="card-pregunta" id="cf-pregunta"></div>
+        <div class="card-hint" id="cf-hint"></div>
+        <div class="card-flip-hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Clic para ver la respuesta
+        </div>
+      </div>
+      <!-- DORSO -->
+      <div class="card-face card-back">
+        <div class="card-respuesta-label">Respuesta</div>
+        <div class="card-respuesta" id="cb-respuesta"></div>
+        <div class="card-explicacion" id="cb-explicacion"></div>
+        <div class="card-back-modulo" id="cb-modulo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTOEVALUACIÓN -->
+  <div class="eval-wrap" id="eval-wrap">
+    <div class="eval-label">¿Cómo te fue con esta card?</div>
+    <div class="eval-btns">
+      <button class="eval-btn eval-btn-ok" onclick="evaluar('ok')">
+        <span class="eval-icon">✓</span>
+        <span class="eval-text">Lo sabía bien</span>
+      </button>
+      <button class="eval-btn eval-btn-parcial" onclick="evaluar('parcial')">
+        <span class="eval-icon">~</span>
+        <span class="eval-text">Más o menos</span>
+      </button>
+      <button class="eval-btn eval-btn-mal" onclick="evaluar('mal')">
+        <span class="eval-icon">✗</span>
+        <span class="eval-text">No lo sabía</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════
+     PANTALLA 3: RESULTADO
+══════════════════════════════════════ -->
+<div id="screen-resultado">
+  <div class="result-card">
+    <div class="result-header">
+      <div class="result-badge" id="res-badge"></div>
+      <div class="result-score" id="res-score"></div>
+      <div class="result-score-lbl">de aciertos</div>
+      <div class="result-nombre" id="res-nombre"></div>
+      <div class="result-msg" id="res-msg"></div>
+    </div>
+
+    <div class="result-stats">
+      <div class="rs-box rs-ok">
+        <div class="rs-n" id="rs-ok">0</div>
+        <div class="rs-l">Lo sabía</div>
+      </div>
+      <div class="rs-box rs-parcial">
+        <div class="rs-n" id="rs-parcial">0</div>
+        <div class="rs-l">Más o menos</div>
+      </div>
+      <div class="rs-box rs-mal">
+        <div class="rs-n" id="rs-mal">0</div>
+        <div class="rs-l">No sabía</div>
+      </div>
+    </div>
+
+    <div class="result-time">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Tiempo total: <strong id="res-tiempo"></strong>
+    </div>
+
+    <div id="repaso-wrap" style="display:none">
+      <div class="repaso-title">Para repasar</div>
+      <div id="repaso-lista"></div>
+    </div>
+
+    <div class="result-btns">
+      <button class="btn-secondary" onclick="reiniciar()">Volver a practicar</button>
+      <button class="btn-primary" style="flex:1" onclick="guardarYMostrar()">
+        Guardar resultado
+      </button>
+    </div>
+    <div class="guardado-msg" id="guardado-msg">✓ Resultado guardado correctamente</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qjwqfnfhujcjaoigndxw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqd3FmbmZodWpjamFvaWduZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNTk3NDIsImV4cCI6MjA5NzkzNTc0Mn0.L67NRzhT1ImqV8vpNWbeWFgiG4qMXz9Lo0Y8GGvA15U';
+
+const MODULO_STYLES = {
+  'Convenios':    { bg:'#FADBD8', color:'#922B21', dot:'#C0392B' },
+  'Liquidación':  { bg:'#D6EAF8', color:'#1A5276', dot:'#2980B9' },
+  'Pagos':        { bg:'#D5F5E3', color:'#145A32', dot:'#1E8449' },
+  'Integración':  { bg:'#E8DAEF', color:'#6C3483', dot:'#8E44AD' },
+  'Facturación':  { bg:'#FAE5D3', color:'#784212', dot:'#E67E22' },
+};
+
+const CARDS = [
+  // ── CONVENIOS ──
+  { modulo:'Convenios',
+    frente:'¿Qué diferencia hay entre un Convenio y un Convenio Directo?',
+    respuesta:'Convenio = persona jurídica (clínica, sanatorio, federación). Convenio Directo = persona física (profesional individual).',
+    explicacion:'Un Convenio se formaliza con organizaciones como colegios, asociaciones, clínicas. El Convenio Directo es el contrato entre JS y un profesional individualmente. Ambos definen condiciones y responsabilidades, pero tienen circuitos de reclamo y pago diferentes.',
+    hint:'Pensá en jurídica vs física.' },
+
+  { modulo:'Convenios',
+    frente:'Un prestador llama diciendo que quiere unirse a la cartilla de JS. ¿Cómo lo orientás?',
+    respuesta:'Debe enviar un email a convenios@jerarquicos.com con: nombre, especialidad, teléfono, email, localidad, prestaciones y valores pretendidos, y el formulario completo.',
+    explicacion:'El formulario también se puede descargar desde jerarquicos.com/prestadores/ → Preguntas Frecuentes → "¿Cómo puedo ser prestador?". Una vez recibida la solicitud, el área de Convenios responde con los pasos de la negociación en aprox. 48 hs.',
+    hint:'Siempre email + formulario.' },
+
+  { modulo:'Convenios',
+    frente:'Un prestador te dice que ya envió el formulario hace dos semanas y no tuvo respuesta. ¿Qué verificás y cómo gestionás?',
+    respuesta:'Verificás en Nativo Salud → Convenios → Gestión de Convenios → Negociación de Futuro Convenio. Si superó el plazo, generás reclamo G1 – Falta de respuesta a pedido de convenio.',
+    explicacion:'Los estados posibles son: Ingreso, Reclamo de Documentación, Propuesta Enviada, Registro en Plataforma, Confección de Convenio, A la Espera del Convenio, Análisis de Grilla, Carga de Valores, Valores Cargados, Final, Inconcluso. Si hay demora sin justificación, se genera el reclamo correspondiente.',
+    hint:'Siempre verificar estado antes de reclamar.' },
+
+  { modulo:'Convenios',
+    frente:'¿Qué es la plataforma Signatura Connect y para qué se usa en JS?',
+    respuesta:'Es la plataforma de firma digital que usa JS para formalizar convenios, incrementos y negociaciones de aranceles. Reemplazó a la versión anterior llamada Signatura.',
+    explicacion:'Se usa para dos tipos de documentos: Negociaciones (nota con el aumento acordado) y Formalización de Convenios (contrato completo). El prestador recibe un mail o SMS con el aviso, hace clic en el hipervínculo, visualiza y firma. Si no le llega el mail, debe escribir a firmaselectronicas@jerarquicos.com.',
+    hint:'El prestador firma desde su mail o SMS.' },
+
+  { modulo:'Convenios',
+    frente:'Un profesional nucleado en un colegio quiere actualizar su domicilio de atención en la cartilla. ¿Qué le decís?',
+    respuesta:'Debe contactarse con el convenio/colegio que lo nuclea para que envíe el listado ABM (Altas, Bajas, Modificaciones) a prestadores@jerarquicos.com. JS lo deriva a GAPyC para procesarlo.',
+    explicacion:'El profesional no puede gestionar sus datos directamente con JS si está nucleado en un ente. Recién si el colegio confirma que ya los envió y JS no actualizó, se toma el reclamo con teléfono y email de contacto para dar respuesta.',
+    hint:'Siempre a través del ente que lo nuclea.' },
+
+  { modulo:'Convenios',
+    frente:'¿Cuándo NO debe informarse el valor de una práctica al prestador desde la pestaña Excepción Convenio?',
+    respuesta:'Nunca se deben informar esos valores porque no están actualizados. Tampoco se informa a prestadores que facturan a través de Colegio/Federación/Círculo.',
+    explicacion:'La ruta gestioninterna:8013/convenios/excepciones muestra valores pero estos pueden estar desactualizados. Para cualquier consulta de valores vigentes, siempre derivar al sector de Convenios.',
+    hint:'Excepciones de convenio = no usar.' },
+
+  { modulo:'Convenios',
+    frente:'¿Qué profesionales tienen sus aranceles actualizados automáticamente y con qué frecuencia?',
+    respuesta:'Los profesionales directos de los grupos de especialidades: Odontología, Nutrición, Terapia Ocupacional, Psicología, Psicopedagogía y Kinesiología. Se actualizan automáticamente cada 3 meses aproximadamente.',
+    explicacion:'Estos profesionales no pueden solicitar aumento de aranceles porque JS los aplica automáticamente. Excepción: los odontólogos de Entre Ríos con convenio directo sí pueden solicitar incremento arancelario.',
+    hint:'No pueden pedirlo ellos — JS lo aplica solo.' },
+
+  // ── LIQUIDACIÓN ──
+  { modulo:'Liquidación',
+    frente:'Un prestador te dice que envió una factura pero la ve dada de baja en el sistema (aparece en rojo). ¿Cuál es el primer paso?',
+    respuesta:'Presionar el renglón correspondiente y seleccionar "Ver motivo de baja". Si no tiene motivo cargado, verificar si hubo facturación mixta o si la factura fue reingresada con otro número de ME.',
+    explicacion:'Las mesas de entrada dadas de baja se identifican en rojo. Si no hay motivo de baja y no se trata de facturación mixta, se genera reclamo G4 - Discordancia con débitos y ajustes. La factura devuelta también aparece en la planilla de correo.',
+    hint:'Primero ver motivo, después reclamar.' },
+
+  { modulo:'Liquidación',
+    frente:'¿Cuántos días corridos tiene un prestador para presentar su facturación sin que sea rechazada?',
+    respuesta:'90 días corridos desde la fecha de realización de las prestaciones (o alta del paciente en internaciones).',
+    explicacion:'Atención: el manual original menciona 60 días, pero la instrucción correcta del CAT es de 90 días. Pasado ese plazo, las prestaciones no se abonan por extemporáneas. Si el prestador envía fuera de término, puede adjuntar una nota explicando la situación para que el sector lo evalúe.',
+    hint:'El manual dice 60 pero el CAT aplica 90.' },
+
+  { modulo:'Liquidación',
+    frente:'¿Qué tipo de factura corresponde según la condición fiscal del prestador?',
+    respuesta:'Responsable Inscripto → Factura tipo B. Monotributista o exento → Factura tipo C.',
+    explicacion:'JS está exenta de IVA desde diciembre 2015. El RI debe incluir el 10,5% de IVA solo en facturas de socios autónomos (planes PMI 2886). Los monotributistas categorías H, I, J, K o L deben emitir facturas electrónicas. Desde el 01/06/2017 no se aceptan facturas C sin CAI.',
+    hint:'RI = B, Monotributista = C.' },
+
+  { modulo:'Liquidación',
+    frente:'¿A nombre de quién se factura según el plan del socio?',
+    respuesta:'Planes PMI (asalariados, jubilados, monotributo) → Obra Social (OSTSAMJBON) CUIT 33-71018560-9. Planes PMI 2886 (autónomos) → Mutual AMPJBON CUIT 30-68695518-0.',
+    explicacion:'Excepciones: Cuidador domiciliario, Acompañante terapéutico, Rehabilitación Visual, Musicoterapia, Enfermería a domicilio e Internación domiciliaria son prestaciones no recuperables → siempre se facturan a la Mutual (30-68695518-0) independientemente del plan.',
+    hint:'Asalariado = Obra Social, Autónomo = Mutual.' },
+
+  { modulo:'Liquidación',
+    frente:'Un prestador quiere refacturar una prestación que le debitaron. ¿Cuáles son los requisitos principales?',
+    respuesta:'Plazo: 60 días desde la recepción del pago. Debe enviar: nota de referencia al débito, copia de la planilla de débitos y ajustes, documentación respaldatoria y copia de factura original. Identificada como REFACTURACIÓN.',
+    explicacion:'Para salud y farmacia no es necesario emitir una factura separada — el concepto se incluye en la próxima facturación ordinaria. En el CAT nunca se debe confirmar refacturación por débitos de farmacia sin autorización del sector liquidaciones (consultar con Luz Vega).',
+    hint:'60 días, separada, con nota y docs.' },
+
+  { modulo:'Liquidación',
+    frente:'¿Cómo se obtiene y envía la caratula de liquidación a un prestador?',
+    respuesta:'Nativo Salud → Auditoría → Liquidaciones → Liquidaciones a convenios → Seleccionar expediente (manito) → ingresar N° de mesa de entrada → Impresora. Recortar el pie antes de enviar.',
+    explicacion:'Es la documentación que respalda la liquidación de la facturación ingresada. Es importante recortarla antes de enviarla al prestador para que no aparezca el nombre completo del operador y el departamento de liquidación en el pie de página.',
+    hint:'Siempre recortar el pie antes de enviar.' },
+
+  { modulo:'Liquidación',
+    frente:'¿Qué debés verificar si un prestador dice que no recibió la planilla de débitos y ajustes?',
+    respuesta:'Buscar en Nativo Salud → Auditoría → Liquidaciones → Liquidaciones a convenios, seleccionar el expediente e imprimir la planilla. Si tiene web de prestadores, puede descargarla él mismo desde ahí.',
+    explicacion:'La planilla muestra los débitos, sus motivos e importes. Los débitos pueden deberse a errores en la facturación, omisión de documentos (falta orden médica, falta autorización) o cobro de plus. También es posible verla desde Consulta CC de Convenio → clic derecho en el expediente.',
+    hint:'Puede descargarla él si tiene acceso web.' },
+
+  // ── PAGOS ──
+  { modulo:'Pagos',
+    frente:'Un prestador dice que no le llegó el cheque. ¿Cómo verificás el estado del envío?',
+    respuesta:'Nativo Salud → pestaña Convenio → Planilla de Correo. Los estados son: Cargado (pendiente), En Espera, Enviado (OCA/Correo Argentino/Sagardia) y Recibido. Haciendo doble clic en la nota "VER" se ve a qué mesa corresponde.',
+    explicacion:'Si el estado es "En Espera" y hay demora, se genera reclamo Proceso G – G4 – Demora de pago (desde CyR se escala a Transporte). OCA y Correo Argentino demoran 3 días hábiles desde la fecha de salida real. Sagardia: 72 hs.',
+    hint:'Siempre verificar estado en Planilla de Correo.' },
+
+  { modulo:'Pagos',
+    frente:'Un prestador quiere el reemplazo de un cheque con fecha de cobro posterior a la esperada. ¿Qué necesitás?',
+    respuesta:'Imagen o copia del cheque roto. Sin ese comprobante no se puede gestionar. Se envía a pagos@jerarquicos.com. El reemplazo demora aprox. 4 días desde que el cheque ingresa a la Mutual.',
+    explicacion:'Los cheques físicos tienen 30 días para ser cobrados. Se emiten con cláusula "No a la Orden" (no pueden cederse a terceros). Los electrónicos (E-cheq) se emiten "A la Orden" (pueden transferirse por endoso). Para E-cheq en disconformidad, el mail también es pagos@jerarquicos.com.',
+    hint:'Sin cheque roto no hay reemplazo.' },
+
+  { modulo:'Pagos',
+    frente:'¿Cómo verificás si una transferencia fue realizada correctamente?',
+    respuesta:'En Herramientas Administrativas: si el N° de cuenta tiene 10 dígitos, la transferencia se realizó. Se puede corroborar en la carpeta W:\\Mutual\\Todos\\Transferencias buscando con ese número (con puntos cada 3 dígitos).',
+    explicacion:'También se puede verificar si el prestador tiene retención de ingresos brutos. JS es agente de retención en Entre Ríos, Salta, Santa Fe y San Juan. Si piden el comprobante de retención, se envía desde Archivo W → Mutual → Comprobante de pago → Retención de Prestadores.',
+    hint:'10 dígitos en columna N° = transferencia OK.' },
+
+  { modulo:'Pagos',
+    frente:'¿A partir de cuándo rige el plazo de pago de 60 días para convenios nuevos?',
+    respuesta:'Para todos los convenios formalizados a partir del 23/02/2026. Los convenios anteriores mantienen el plazo ya pactado (15 o 30 días).',
+    explicacion:'El cambio fue implementado desde esa fecha. Es importante aclararlo cuando un prestador con convenio antiguo consulte por sus plazos: su contrato previo sigue vigente. Los nuevos ingresan automáticamente a 60 días desde la firma.',
+    hint:'Solo los nuevos desde 23/02/26 van a 60 días.' },
+
+  // ── INTEGRACIÓN ──
+  { modulo:'Integración',
+    frente:'¿Qué es el mecanismo de integración y quiénes pueden acceder?',
+    respuesta:'Es el circuito por el cual JS le rinde a la Superintendencia de Servicios de Salud (SSS) las prestaciones de rehabilitación de socios con Certificado de Discapacidad vigente, para recuperar el subsidio.',
+    explicacion:'La SSS determina si aprueba el subsidio. Si lo aprueba, deposita en la cuenta de la Obra Social y desde ahí se transfiere al prestador. En principio no se rinden a integración los tratamientos de socios con planes autónomos. El prestador debe facturar mensualmente aunque la autorización sea anual.',
+    hint:'CUD vigente + facturación mensual.' },
+
+  { modulo:'Integración',
+    frente:'¿Cuáles son los plazos clave para la presentación de facturación de integración?',
+    respuesta:'Del 1 al 10 de cada mes (a mes vencido). El pago demora aprox. 60 días desde el ingreso. La presentación a la SSS se hace una vez al mes, generalmente a fin de mes.',
+    explicacion:'Según la Resolución 1743/2024, anteriormente se reconocían 3 períodos hacia atrás. Ahora se siguen reconociendo 90 días, pero el tercer mes debe abonarse con fondos propios de la Obra Social previamente, y se recupera luego al recibir el pago de SSS.',
+    hint:'Del 1 al 10, pago en ~60 días.' },
+
+  { modulo:'Integración',
+    frente:'Un prestador de integración te dice que facturó con valores desactualizados. ¿Cómo procedés?',
+    respuesta:'Si la ME ya fue cargada, se da de baja y se carga la nueva factura con los montos actuales. La SSS aclaró que no recibe diferencias — los aranceles deben ir correctos desde el inicio.',
+    explicacion:'Los aranceles de discapacidad están publicados en la página de la SSS. No se brinda esa información desde el CAT — se sugiere al prestador que los consulte ahí. Si los aranceles se publicaron con retroactivo, se evalúa cada caso. Los valores que rigen son los publicados previo al mes de facturación.',
+    hint:'Sin diferencias — siempre con valores correctos.' },
+
+  { modulo:'Integración',
+    frente:'¿Qué documentación respaldatoria debe incluir una factura de integración?',
+    respuesta:'Planilla de Asistencia (con fechas, firma del socio/familiar y sello del profesional), Expediente de Autorización e Informe semestral desde el inicio del período autorizado.',
+    explicacion:'La Planilla de Asistencia debe contener: nombre y apellido del socio, profesional/institución, N° de expediente de autorización, plan, N° de socio, fecha de cada sesión con firma y aclaración del socio o familiar, y firma y sello del profesional. Sin esto, se aplica deducción total o parcial.',
+    hint:'Planilla + autorización + informe semestral.' },
+
+  // ── FACTURACIÓN ──
+  { modulo:'Facturación',
+    frente:'¿Cuál es el CUIT y nombre completo de la Mutual al que se factura para planes autónomos (PMI 2886)?',
+    respuesta:'Asociación Mutual del Personal Jerárquico de Bancos Oficiales Nacionales (AMPJBON) — CUIT: 30-68695518-0',
+    explicacion:'Este dato es crítico en la recepción de facturas. Las facturas mal confeccionadas se devuelven. El domicilio para facturas físicas es Av. Facundo Zuviría 4612, Santa Fe, CP 3000. Para planes de asalariados/jubilados el CUIT es diferente: 33-71018560-9 (Obra Social).',
+    hint:'30-686... para autónomos (Mutual).' },
+];
+
+document.getElementById('stat-total').textContent = CARDS.length;
+
+let cards, idx, resultados, nombre, startTime, yaGuardado;
+
+function empezar() {
+  nombre = document.getElementById('input-nombre').value.trim();
+  if (!nombre) {
+    document.getElementById('input-nombre').focus();
+    document.getElementById('input-nombre').style.borderColor = 'var(--rojo)';
+    return;
+  }
+  cards = shuffle(CARDS);
+  idx = 0; resultados = []; yaGuardado = false;
+  startTime = Date.now();
+  buildDots();
+  mostrarCard();
+  show('screen-juego');
+}
+
+function shuffle(a) { return a.slice().sort(() => Math.random() - 0.5); }
+
+function show(id) {
+  ['screen-inicio','screen-juego','screen-resultado'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function buildDots() {
+  const wrap = document.getElementById('prog-dots');
+  wrap.innerHTML = '';
+  cards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'pdot' + (i === 0 ? ' activo' : '');
+    d.id = 'pdot-' + i;
+    wrap.appendChild(d);
+  });
+}
+
+function updateDot(i, estado) {
+  const d = document.getElementById('pdot-' + i);
+  if (d) d.className = 'pdot ' + estado;
+}
+
+function mostrarCard() {
+  const card = cards[idx];
+  const st = MODULO_STYLES[card.modulo] || MODULO_STYLES['Convenios'];
+
+  // Reset flip
+  const inner = document.getElementById('card-inner');
+  inner.classList.remove('flipped');
+
+  // Frente
+  const mEl = document.getElementById('cf-modulo');
+  mEl.textContent = card.modulo;
+  mEl.style.background = st.bg;
+  mEl.style.color = st.color;
+  document.getElementById('cf-num').textContent = (idx + 1) + ' / ' + cards.length;
+  document.getElementById('cf-pregunta').textContent = card.frente;
+  const hEl = document.getElementById('cf-hint');
+  if (card.hint) { hEl.innerHTML = '💡 ' + card.hint; hEl.style.display = 'flex'; }
+  else { hEl.style.display = 'none'; }
+
+  // Dorso
+  document.getElementById('cb-respuesta').textContent = card.respuesta;
+  document.getElementById('cb-explicacion').textContent = card.explicacion;
+  document.getElementById('cb-modulo').textContent = card.modulo;
+
+  // Progreso
+  document.getElementById('prog-modulo').textContent = card.modulo;
+  document.getElementById('prog-num').textContent = (idx + 1) + ' / ' + cards.length;
+  document.getElementById('prog-bar').style.width = Math.round((idx / cards.length) * 100) + '%';
+
+  // Ocultar eval
+  document.getElementById('eval-wrap').style.display = 'none';
+  updateDot(idx, 'activo');
+}
+
+function voltear() {
+  const inner = document.getElementById('card-inner');
+  inner.classList.toggle('flipped');
+  if (inner.classList.contains('flipped')) {
+    document.getElementById('eval-wrap').style.display = 'block';
+  }
+}
+
+function evaluar(nivel) {
+  resultados.push({ card: cards[idx], nivel });
+  updateDot(idx, nivel === 'ok' ? 'ok' : nivel === 'parcial' ? 'parcial' : 'mal');
+  idx++;
+  if (idx >= cards.length) { mostrarResultado(); return; }
+  mostrarCard();
+}
+
+function mostrarResultado() {
+  const ok = resultados.filter(r => r.nivel === 'ok').length;
+  const parcial = resultados.filter(r => r.nivel === 'parcial').length;
+  const mal = resultados.filter(r => r.nivel === 'mal').length;
+  const pct = Math.round((ok / cards.length) * 100);
+  const secs = Math.round((Date.now() - startTime) / 1000);
+  const mins = Math.floor(secs / 60), s = secs % 60;
+
+  document.getElementById('res-nombre').textContent = nombre;
+  document.getElementById('res-score').textContent = pct + '%';
+  document.getElementById('rs-ok').textContent = ok;
+  document.getElementById('rs-parcial').textContent = parcial;
+  document.getElementById('rs-mal').textContent = mal;
+  document.getElementById('res-tiempo').textContent = mins + ':' + (s < 10 ? '0' : '') + s;
+
+  const badge = document.getElementById('res-badge');
+  let msg = '';
+  if (pct >= 80) {
+    badge.textContent = '🏆'; badge.style.background = '#D5F5E3';
+    msg = 'Excelente dominio del material. ¡Listo para la línea!';
+  } else if (pct >= 60) {
+    badge.textContent = '📚'; badge.style.background = '#FEF9E7';
+    msg = 'Buen avance. Repasá los temas marcados abajo antes de atender.';
+  } else {
+    badge.textContent = '💪'; badge.style.background = '#FADBD8';
+    msg = 'Seguí practicando — el manual tiene mucho para fijar todavía.';
+  }
+  document.getElementById('res-msg').textContent = msg;
+
+  // Cards para repasar
+  const malas = resultados.filter(r => r.nivel === 'mal' || r.nivel === 'parcial');
+  if (malas.length) {
+    document.getElementById('repaso-wrap').style.display = 'block';
+    const lista = document.getElementById('repaso-lista');
+    lista.innerHTML = '';
+    malas.forEach(r => {
+      const d = document.createElement('div');
+      d.className = 'repaso-item';
+      d.innerHTML = `<div class="ri-q">${r.card.frente}</div><div class="ri-a">→ ${r.card.respuesta.substring(0,80)}${r.card.respuesta.length>80?'…':''}</div>`;
+      lista.appendChild(d);
+    });
+  }
+
+  show('screen-resultado');
+  document.getElementById('prog-bar').style.width = '100%';
+}
+
+async function guardarYMostrar() {
+  if (yaGuardado) return;
+  const btn = document.querySelector('#screen-resultado .btn-primary');
+  btn.innerHTML = '<span class="spinner"></span> Guardando...';
+  btn.disabled = true;
+
+  const ok = resultados.filter(r => r.nivel === 'ok').length;
+  const parcial = resultados.filter(r => r.nivel === 'parcial').length;
+  const mal = resultados.filter(r => r.nivel === 'mal').length;
+  const secs = Math.round((Date.now() - startTime) / 1000);
+  const pct = Math.round((ok / cards.length) * 100);
+  const detalle = resultados.map(r => ({
+    modulo: r.card.modulo,
+    frente: r.card.frente.substring(0, 80),
+    nivel: r.nivel
+  }));
+
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/flashcard_resultados', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        nombre, correctas: ok, parciales: parcial, incorrectas: mal,
+        total: cards.length, tiempo_segundos: secs,
+        porcentaje: pct, detalle_json: detalle
+      })
+    });
+    if (res.ok) {
+      yaGuardado = true;
+      document.getElementById('guardado-msg').style.display = 'block';
+      btn.textContent = '✓ Guardado';
+      btn.style.background = 'var(--verde)';
+    } else {
+      throw new Error('Error al guardar');
+    }
+  } catch(e) {
+    btn.textContent = 'Error — reintentar';
+    btn.disabled = false;
+    btn.style.background = 'var(--gris-medio)';
+  }
+}
+
+function reiniciar() {
+  document.getElementById('repaso-wrap').style.display = 'none';
+  document.getElementById('guardado-msg').style.display = 'none';
+  const btn = document.querySelector('#screen-resultado .btn-primary');
+  btn.textContent = 'Guardar resultado';
+  btn.disabled = false;
+  btn.style.background = 'var(--rojo)';
+  show('screen-inicio');
+}
+</script>
+</body>
+</html>

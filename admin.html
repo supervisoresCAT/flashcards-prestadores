@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Panel Admin — Flashcards Prestadores · JS</title>
+<style>
+  :root {
+    --rojo: #C0392B;
+    --rojo-oscuro: #922B21;
+    --rojo-claro: #FADBD8;
+    --rojo-suave: #F9EBEA;
+    --gris-oscuro: #2C3E50;
+    --gris-medio: #5D6D7E;
+    --gris-claro: #F0F3F4;
+    --gris-borde: #D5D8DC;
+    --blanco: #FFFFFF;
+    --verde: #1E8449;
+    --verde-claro: #D5F5E3;
+    --amarillo: #D68910;
+    --amarillo-claro: #FEF9E7;
+    --texto: #1C2833;
+    --sombra: 0 2px 12px rgba(0,0,0,0.10);
+    --sombra-card: 0 4px 24px rgba(0,0,0,0.13);
+    --radio: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--gris-claro);
+    color: var(--texto); min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--rojo); padding: 0 24px;
+    height: 58px; display: flex; align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .header-brand {
+    display: flex; align-items: center; gap: 10px;
+    color: white; font-weight: 700; font-size: 15px;
+  }
+  .header-brand .logo {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: white;
+  }
+  .header-badge {
+    font-size: 11px; background: rgba(255,255,255,0.2);
+    color: white; padding: 3px 8px; border-radius: 12px;
+    font-weight: 600;
+  }
+  .btn-back {
+    font-size: 12px; color: rgba(255,255,255,0.75);
+    text-decoration: none; padding: 4px 10px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px; transition: all .2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,0.15); color: white; }
+
+  /* LOGIN */
+  #screen-login {
+    max-width: 400px; margin: 80px auto; padding: 0 24px;
+  }
+  .login-card {
+    background: white; border-radius: var(--radio);
+    box-shadow: var(--sombra-card); padding: 40px;
+    text-align: center;
+  }
+  .login-icon {
+    width: 56px; height: 56px; background: var(--rojo-suave);
+    border-radius: 14px; display: flex; align-items: center;
+    justify-content: center; font-size: 24px;
+    margin: 0 auto 20px;
+  }
+  .login-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .login-card p { font-size: 14px; color: var(--gris-medio); margin-bottom: 24px; }
+  .form-group { text-align: left; margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--gris-medio); margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px; font-size: 15px; color: var(--texto);
+    outline: none; transition: border-color .2s;
+    font-family: inherit;
+  }
+  .form-group input:focus { border-color: var(--rojo); }
+  .error-msg {
+    color: var(--rojo); font-size: 13px;
+    margin-bottom: 12px; display: none;
+  }
+  .btn-primary {
+    width: 100%; padding: 13px;
+    background: var(--rojo); color: white;
+    border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: background .2s;
+    font-family: inherit;
+  }
+  .btn-primary:hover { background: var(--rojo-oscuro); }
+
+  /* MAIN ADMIN */
+  #screen-admin { display: none; padding: 24px; }
+  .admin-wrap { max-width: 1100px; margin: 0 auto; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 20px;
+    border-bottom: 2px solid var(--gris-borde);
+  }
+  .tab {
+    padding: 10px 18px; font-size: 14px; font-weight: 600;
+    color: var(--gris-medio); cursor: pointer; border: none;
+    background: none; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: all .2s;
+    font-family: inherit;
+  }
+  .tab.active { color: var(--rojo); border-bottom-color: var(--rojo); }
+  .tab:hover:not(.active) { color: var(--gris-oscuro); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: white; border-radius: var(--radio);
+    box-shadow: var(--sombra); padding: 18px 20px;
+  }
+  .kpi-label {
+    font-size: 12px; color: var(--gris-medio);
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em; margin-bottom: 6px;
+  }
+  .kpi-val { font-size: 28px; font-weight: 800; color: var(--gris-oscuro); }
+  .kpi-sub { font-size: 12px; color: var(--gris-medio); margin-top: 2px; }
+
+  /* TABLA */
+  .card-table {
+    background: white; border-radius: var(--radio);
+    box-shadow: var(--sombra); overflow: hidden;
+  }
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--gris-borde);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .table-title { font-size: 15px; font-weight: 700; color: var(--gris-oscuro); }
+  .table-actions { display: flex; gap: 8px; align-items: center; }
+  .input-search {
+    padding: 7px 12px; border: 1.5px solid var(--gris-borde);
+    border-radius: 8px; font-size: 13px; color: var(--texto);
+    outline: none; width: 200px; font-family: inherit;
+  }
+  .input-search:focus { border-color: var(--rojo); }
+  .btn-export {
+    padding: 7px 14px; background: white;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; color: var(--gris-oscuro);
+    transition: all .2s; font-family: inherit;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .btn-export:hover { border-color: var(--rojo); color: var(--rojo); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 10px 16px;
+    font-size: 11px; font-weight: 700; color: var(--gris-medio);
+    text-transform: uppercase; letter-spacing: .05em;
+    background: var(--gris-claro); border-bottom: 1px solid var(--gris-borde);
+    cursor: pointer; user-select: none;
+  }
+  th:hover { color: var(--rojo); }
+  td {
+    padding: 11px 16px; font-size: 13px;
+    border-bottom: 1px solid var(--gris-borde);
+    color: var(--texto);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--rojo-suave); }
+
+  .badge {
+    display: inline-block; padding: 3px 8px;
+    border-radius: 20px; font-size: 11px; font-weight: 700;
+  }
+  .badge-ok { background: var(--verde-claro); color: #145A32; }
+  .badge-medio { background: var(--amarillo-claro); color: #784212; }
+  .badge-bajo { background: var(--rojo-claro); color: var(--rojo-oscuro); }
+
+  /* RANKING */
+  .ranking-list { padding: 8px 0; }
+  .rank-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid var(--gris-borde);
+    transition: background .15s;
+  }
+  .rank-item:last-child { border-bottom: none; }
+  .rank-item:hover { background: var(--rojo-suave); }
+  .rank-pos {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; flex-shrink: 0;
+  }
+  .rank-1 { background: #FEF3C7; color: #92400E; }
+  .rank-2 { background: #F3F4F6; color: #374151; }
+  .rank-3 { background: #FEE2E2; color: #991B1B; }
+  .rank-n { background: var(--gris-claro); color: var(--gris-medio); }
+  .rank-info { flex: 1; }
+  .rank-nombre { font-size: 14px; font-weight: 600; color: var(--gris-oscuro); }
+  .rank-fecha { font-size: 12px; color: var(--gris-medio); margin-top: 1px; }
+  .rank-score {
+    font-size: 20px; font-weight: 800; color: var(--rojo);
+    min-width: 52px; text-align: right;
+  }
+
+  /* ANALYTICS */
+  .analytics-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+    gap: 12px;
+  }
+  .analytics-card {
+    background: white; border-radius: var(--radio);
+    box-shadow: var(--sombra); padding: 18px 20px;
+  }
+  .analytics-title {
+    font-size: 13px; font-weight: 700; color: var(--gris-oscuro);
+    margin-bottom: 14px; text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .bar-item { margin-bottom: 10px; }
+  .bar-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; margin-bottom: 4px;
+  }
+  .bar-label .bl-name { color: var(--gris-oscuro); font-weight: 500; flex: 1; padding-right: 8px; }
+  .bar-label .bl-pct { color: var(--rojo); font-weight: 700; }
+  .bar-bg {
+    height: 6px; background: var(--gris-borde);
+    border-radius: 3px; overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 3px;
+    background: var(--rojo); transition: width .6s ease;
+  }
+
+  /* LOADING */
+  .loading {
+    text-align: center; padding: 48px;
+    color: var(--gris-medio); font-size: 14px;
+  }
+  .spinner {
+    display: inline-block; width: 20px; height: 20px;
+    border: 2px solid var(--gris-borde);
+    border-top-color: var(--rojo); border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center; padding: 48px;
+    color: var(--gris-medio);
+  }
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  @media (max-width: 600px) {
+    #screen-admin { padding: 12px; }
+    .kpi-grid { grid-template-columns: repeat(2,1fr); }
+    .input-search { width: 140px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="logo">JS</div>
+    Flashcards — Panel Admin
+    <span class="header-badge">Supervisores</span>
+  </div>
+  <a href="index.html" class="btn-back">← Volver al juego</a>
+</header>
+
+<!-- LOGIN -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-icon">🔒</div>
+    <h2>Acceso restringido</h2>
+    <p>Solo para supervisores del CAT</p>
+    <div class="error-msg" id="error-msg">Contraseña incorrecta</div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="input-pass" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter') login()"/>
+    </div>
+    <button class="btn-primary" onclick="login()">Ingresar</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="screen-admin">
+  <div class="admin-wrap">
+
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('resultados')">Resultados</button>
+      <button class="tab" onclick="setTab('ranking')">Ranking</button>
+      <button class="tab" onclick="setTab('analytics')">Análisis por módulo</button>
+    </div>
+
+    <!-- TAB: RESULTADOS -->
+    <div id="tab-resultados" class="tab-content active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Intentos totales</div>
+          <div class="kpi-val" id="kpi-total">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Promedio aciertos</div>
+          <div class="kpi-val" id="kpi-prom">—</div>
+          <div class="kpi-sub">sobre 100%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Mejor resultado</div>
+          <div class="kpi-val" id="kpi-mejor">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Tiempo promedio</div>
+          <div class="kpi-val" id="kpi-tiempo">—</div>
+          <div class="kpi-sub">min:seg</div>
+        </div>
+      </div>
+
+      <div class="card-table">
+        <div class="table-header">
+          <div class="table-title">Todos los resultados</div>
+          <div class="table-actions">
+            <input type="text" class="input-search" id="search-input"
+              placeholder="Buscar nombre..." oninput="filtrarTabla()"/>
+            <button class="btn-export" onclick="exportarCSV()">
+              ⬇ Exportar CSV
+            </button>
+          </div>
+        </div>
+        <div id="tabla-wrap">
+          <div class="loading"><span class="spinner"></span>Cargando resultados...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: RANKING -->
+    <div id="tab-ranking" class="tab-content">
+      <div class="card-table">
+        <div class="table-header">
+          <div class="table-title">🏆 Ranking — mejores puntajes</div>
+        </div>
+        <div class="ranking-list" id="ranking-lista">
+          <div class="loading"><span class="spinner"></span>Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ANALYTICS -->
+    <div id="tab-analytics" class="tab-content">
+      <div class="analytics-grid" id="analytics-wrap">
+        <div class="loading"><span class="spinner"></span>Cargando análisis...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qjwqfnfhujcjaoigndxw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqd3FmbmZodWpjamFvaWduZHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNTk3NDIsImV4cCI6MjA5NzkzNTc0Mn0.L67NRzhT1ImqV8vpNWbeWFgiG4qMXz9Lo0Y8GGvA15U';
+const ADMIN_PASS = 'js2026';
+
+let allData = [];
+let filteredData = [];
+let sortDir = { col: 'fecha', asc: false };
+
+function login() {
+  const val = document.getElementById('input-pass').value;
+  if (val === ADMIN_PASS) {
+    document.getElementById('screen-login').style.display = 'none';
+    document.getElementById('screen-admin').style.display = 'block';
+    cargarDatos();
+  } else {
+    document.getElementById('error-msg').style.display = 'block';
+    document.getElementById('input-pass').style.borderColor = 'var(--rojo)';
+    document.getElementById('input-pass').value = '';
+  }
+}
+
+function setTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[onclick="setTab('${name}')"]`).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+async function cargarDatos() {
+  try {
+    const res = await fetch(
+      SUPABASE_URL + '/rest/v1/flashcard_resultados?select=*&order=fecha.desc',
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY } }
+    );
+    allData = await res.json();
+    filteredData = [...allData];
+    renderKPIs();
+    renderTabla();
+    renderRanking();
+    renderAnalytics();
+  } catch(e) {
+    document.getElementById('tabla-wrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Error al cargar datos. Verificá la conexión.</p></div>';
+  }
+}
+
+function renderKPIs() {
+  const total = allData.length;
+  document.getElementById('kpi-total').textContent = total;
+  if (!total) return;
+  const prom = Math.round(allData.reduce((s,r) => s + (r.porcentaje||0), 0) / total);
+  const mejor = Math.max(...allData.map(r => r.porcentaje||0));
+  const tiempoAvg = Math.round(allData.reduce((s,r) => s + (r.tiempo_segundos||0), 0) / total);
+  document.getElementById('kpi-prom').textContent = prom + '%';
+  document.getElementById('kpi-mejor').textContent = mejor + '%';
+  const m = Math.floor(tiempoAvg/60), s = tiempoAvg%60;
+  document.getElementById('kpi-tiempo').textContent = m + ':' + (s<10?'0':'') + s;
+}
+
+function renderTabla() {
+  if (!filteredData.length) {
+    document.getElementById('tabla-wrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">📭</div><p>No hay resultados registrados aún.</p></div>';
+    return;
+  }
+  let html = `<table>
+    <thead><tr>
+      <th onclick="sortBy('nombre')">Nombre ↕</th>
+      <th onclick="sortBy('fecha')">Fecha ↕</th>
+      <th onclick="sortBy('porcentaje')">Resultado ↕</th>
+      <th>Correctas</th>
+      <th>Parciales</th>
+      <th>Incorrectas</th>
+      <th onclick="sortBy('tiempo_segundos')">Tiempo ↕</th>
+    </tr></thead><tbody>`;
+  filteredData.forEach(r => {
+    const fecha = new Date(r.fecha).toLocaleDateString('es-AR', {
+      day:'2-digit', month:'2-digit', year:'numeric',
+      hour:'2-digit', minute:'2-digit'
+    });
+    const pct = r.porcentaje || 0;
+    const badge = pct >= 80 ? 'ok' : pct >= 60 ? 'medio' : 'bajo';
+    const mins = Math.floor((r.tiempo_segundos||0)/60);
+    const secs = (r.tiempo_segundos||0) % 60;
+    html += `<tr>
+      <td><strong>${esc(r.nombre)}</strong></td>
+      <td>${fecha}</td>
+      <td><span class="badge badge-${badge}">${pct}%</span></td>
+      <td>${r.correctas ?? '—'}</td>
+      <td>${r.parciales ?? '—'}</td>
+      <td>${r.incorrectas ?? '—'}</td>
+      <td>${mins}:${secs<10?'0':''}${secs}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('tabla-wrap').innerHTML = html;
+}
+
+function renderRanking() {
+  const top = [...allData]
+    .sort((a,b) => (b.porcentaje||0) - (a.porcentaje||0))
+    .slice(0, 20);
+  if (!top.length) {
+    document.getElementById('ranking-lista').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">🏆</div><p>Todavía no hay resultados.</p></div>';
+    return;
+  }
+  let html = '';
+  top.forEach((r, i) => {
+    const pos = i + 1;
+    const cls = pos === 1 ? 'rank-1' : pos === 2 ? 'rank-2' : pos === 3 ? 'rank-3' : 'rank-n';
+    const emoji = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+    const fecha = new Date(r.fecha).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'});
+    html += `<div class="rank-item">
+      <div class="rank-pos ${cls}">${emoji}</div>
+      <div class="rank-info">
+        <div class="rank-nombre">${esc(r.nombre)}</div>
+        <div class="rank-fecha">${fecha}</div>
+      </div>
+      <div class="rank-score">${r.porcentaje || 0}%</div>
+    </div>`;
+  });
+  document.getElementById('ranking-lista').innerHTML = html;
+}
+
+function renderAnalytics() {
+  if (!allData.length) {
+    document.getElementById('analytics-wrap').innerHTML =
+      '<div class="empty-state"><div class="empty-icon">📊</div><p>Necesitás al menos un resultado para ver el análisis.</p></div>';
+    return;
+  }
+
+  const moduloStats = {};
+  const cardStats = {};
+
+  allData.forEach(r => {
+    if (!r.detalle_json) return;
+    r.detalle_json.forEach(item => {
+      if (!moduloStats[item.modulo]) moduloStats[item.modulo] = { ok:0, parcial:0, mal:0, total:0 };
+      moduloStats[item.modulo].total++;
+      moduloStats[item.modulo][item.nivel === 'ok' ? 'ok' : item.nivel === 'parcial' ? 'parcial' : 'mal']++;
+
+      const key = item.frente ? item.frente.substring(0,50) : 'Card';
+      if (!cardStats[key]) cardStats[key] = { mal:0, total:0 };
+      cardStats[key].total++;
+      if (item.nivel === 'mal') cardStats[key].mal++;
+    });
+  });
+
+  // Módulos
+  let modHtml = `<div class="analytics-card">
+    <div class="analytics-title">Rendimiento por módulo</div>`;
+  Object.entries(moduloStats).forEach(([mod, s]) => {
+    const pct = Math.round((s.ok / s.total) * 100);
+    modHtml += `<div class="bar-item">
+      <div class="bar-label">
+        <span class="bl-name">${esc(mod)}</span>
+        <span class="bl-pct">${pct}% correctas</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  });
+  modHtml += '</div>';
+
+  // Cards más falladas
+  const masError = Object.entries(cardStats)
+    .filter(([_, s]) => s.total >= 2)
+    .sort((a,b) => (b[1].mal/b[1].total) - (a[1].mal/a[1].total))
+    .slice(0, 8);
+
+  let cardHtml = `<div class="analytics-card">
+    <div class="analytics-title">Cards más difíciles</div>`;
+  if (masError.length === 0) {
+    cardHtml += '<p style="font-size:13px;color:var(--gris-medio)">Necesitás más intentos para ver este análisis.</p>';
+  } else {
+    masError.forEach(([pregunta, s]) => {
+      const pct = Math.round((s.mal / s.total) * 100);
+      cardHtml += `<div class="bar-item">
+        <div class="bar-label">
+          <span class="bl-name">${esc(pregunta)}…</span>
+          <span class="bl-pct" style="color:var(--rojo)">${pct}% fallo</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:var(--rojo)"></div></div>
+      </div>`;
+    });
+  }
+  cardHtml += '</div>';
+
+  // Distribución niveles global
+  const totalOk = allData.reduce((s,r)=>s+(r.correctas||0),0);
+  const totalParcial = allData.reduce((s,r)=>s+(r.parciales||0),0);
+  const totalMal = allData.reduce((s,r)=>s+(r.incorrectas||0),0);
+  const totalCards = totalOk + totalParcial + totalMal || 1;
+  const pctOk = Math.round((totalOk/totalCards)*100);
+  const pctParcial = Math.round((totalParcial/totalCards)*100);
+  const pctMal = Math.round((totalMal/totalCards)*100);
+
+  const distHtml = `<div class="analytics-card">
+    <div class="analytics-title">Distribución global</div>
+    <div class="bar-item">
+      <div class="bar-label">
+        <span class="bl-name">Lo sabía bien</span>
+        <span class="bl-pct" style="color:var(--verde)">${pctOk}%</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pctOk}%;background:var(--verde)"></div></div>
+    </div>
+    <div class="bar-item">
+      <div class="bar-label">
+        <span class="bl-name">Más o menos</span>
+        <span class="bl-pct" style="color:var(--amarillo)">${pctParcial}%</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pctParcial}%;background:var(--amarillo)"></div></div>
+    </div>
+    <div class="bar-item">
+      <div class="bar-label">
+        <span class="bl-name">No lo sabía</span>
+        <span class="bl-pct">${pctMal}%</span>
+      </div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pctMal}%"></div></div>
+    </div>
+  </div>`;
+
+  document.getElementById('analytics-wrap').innerHTML = modHtml + cardHtml + distHtml;
+}
+
+function filtrarTabla() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  filteredData = allData.filter(r => r.nombre && r.nombre.toLowerCase().includes(q));
+  renderTabla();
+}
+
+function sortBy(col) {
+  if (sortDir.col === col) sortDir.asc = !sortDir.asc;
+  else { sortDir.col = col; sortDir.asc = false; }
+  filteredData.sort((a,b) => {
+    let va = a[col], vb = b[col];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortDir.asc ? -1 : 1;
+    if (va > vb) return sortDir.asc ? 1 : -1;
+    return 0;
+  });
+  renderTabla();
+}
+
+function exportarCSV() {
+  if (!allData.length) return;
+  const cols = ['nombre','fecha','porcentaje','correctas','parciales','incorrectas','tiempo_segundos'];
+  const header = 'Nombre,Fecha,Porcentaje,Correctas,Parciales,Incorrectas,Tiempo(seg)';
+  const rows = allData.map(r =>
+    cols.map(c => {
+      let v = r[c] ?? '';
+      if (c === 'fecha') v = new Date(v).toLocaleString('es-AR');
+      if (c === 'nombre' && String(v).includes(',')) v = `"${v}"`;
+      return v;
+    }).join(',')
+  );
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'flashcards_resultados.csv';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
